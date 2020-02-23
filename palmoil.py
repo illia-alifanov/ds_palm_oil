@@ -1,41 +1,64 @@
-#import warnings
-#import itertools
+
 import numpy as np
 import matplotlib.pyplot as plt
-#warnings.filterwarnings("ignore")
-#plt.style.use('fivethirtyeight')
 import pandas as pd
+
+#import warnings
+#import itertools
+#warnings.filterwarnings("ignore")
 #import statsmodels.api as sm
 #import matplotlib
-import array as arr
+#import array as arr
 
 
-def getExcelSheet(fileName, sheetName):
-    production_ = pd.read_excel(fileName, sheetName)
-
+def getProduction():
+    production_ = pd.read_excel(fileName, 'MonthlyProduction')
     production_['Date'] = production_['Year'].apply(str) + '-' + production_['Month'].apply(str) + '-01'
     production_['Date'] = production_['Date'].apply(pd.to_datetime)
     return production_
 
+def getArea():
+    area_ = pd.read_excel(fileName, 'TotalPlantedArea')
+    area_['OTHERPEN'] = area_['KDH'] + 	area_['KTN'] + area_['MLK'] + area_['NSN'] + area_['PNG'] + area_['SGR'] + area_['TRG']
+    return area_
+
 def main():
-    fileName = 'D:\projects\dsacademy\palmoil\data\palm.xlsx'
-    sheetName = 'MonthlyProduction'
-    production = getExcelSheet(fileName, sheetName)
+    #------- production
+    production = getProduction()
 
     regions = ['JHR', 'PHG', 'PRK', 'SBH', 'SWK', 'OTHERPEN']
 
+    fig, (ax1, ax2) = plt.subplots(2, 1)
+    #make a little extra space between the subplots
+    fig.subplots_adjust(hspace=0.5)
+
     for r in regions:
-        plt.plot(production['Date'], production[r], label=r) #, marker='o'
+        ax1.plot(production['Date'], production[r], label=r) #, marker='o'
  
+    ax1.set_title('Production vs time')
+    ax1.set_xlabel('Time')
+    ax1.set_ylabel('Production')
+    ax1.grid(True)
+    ax1.legend(loc='upper left')
+
     
-    plt.xlabel('Production date')
-    plt.ylabel('Production vs Date')
-    plt.grid(True)
-    plt.legend(loc='lower right')
+    #------- area 
+    area = getArea()
+    for r in regions:
+        ax2.plot(area['YEAR'], area[r], label=r) #, marker='o'
+
+    ax2.set_title('Area vs year')
+    ax2.set_xlabel('Year')
+    ax2.set_ylabel('Area')
+    ax2.grid(True)
+    ax2.legend(loc='upper left')
 
     plt.show()
 
-    #print(production)
+    
+#
+fileName = 'D:\projects\dsacademy\palmoil\data\palm.xlsx'
+plt.style.use('fivethirtyeight')
 
 main()
 
