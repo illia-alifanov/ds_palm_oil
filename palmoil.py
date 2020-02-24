@@ -22,6 +22,13 @@ def getArea():
     area_['OTHERPEN'] = area_['KDH'] + 	area_['KTN'] + area_['MLK'] + area_['NSN'] + area_['PNG'] + area_['SGR'] + area_['TRG']
     return area_
 
+def getRainfalls():
+    #https://www.geeksforgeeks.org/create-a-list-from-rows-in-pandas-dataframe/
+    rainfalls_ = []
+
+    return rainfalls_
+
+
 def main():
     #------- production
     production = getProduction()
