@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
+from collections import defaultdict
+
 #import warnings
 #import itertools
 #warnings.filterwarnings("ignore")
@@ -23,19 +25,44 @@ def getArea():
     return area_
 
 def getRainfalls():
-    #https://www.geeksforgeeks.org/create-a-list-from-rows-in-pandas-dataframe/
-    rainfalls_ = []
+    rainfalls_ = pd.read_excel(fileName, 'MonthlyRainfall')
 
-    return rainfalls_
+    # initialize month list
+    month = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+
+    # initialize dictionary of dictionaries
+    falls_regions = defaultdict(dict)
+
+    for index, row in rainfalls_.iterrows():
+      if row.State not in regions:
+        continue
+
+      for i, m in enumerate(month, start = 1):
+        date_str = str(row['Year']) + '-' + "{:02d}".format(i) + '-01'
+        new_data = {date_str: row[m]}
+        falls_regions[row.State].update(new_data)
+
+    result = pd.DataFrame()
+    for r in regions:
+      columns_list = [r]
+
+      if result.empty:
+        result = pd.DataFrame.from_dict(falls_regions[r], orient = 'index', columns = [r])
+        continue
+      else:
+        df = pd.DataFrame.from_dict(falls_regions[r], orient = 'index', columns = [r])
+      
+      result = result.join(df, how = 'outer')
+
+    return result
 
 
 def main():
+
     #------- production
     production = getProduction()
 
-    regions = ['JHR', 'PHG', 'PRK', 'SBH', 'SWK', 'OTHERPEN']
-
-    fig, (ax1, ax2) = plt.subplots(2, 1)
+    fig, (ax1, ax2, ax3) = plt.subplots(3, 1)
     #make a little extra space between the subplots
     fig.subplots_adjust(hspace=0.5)
 
@@ -47,7 +74,6 @@ def main():
     ax1.set_ylabel('Production')
     ax1.grid(True)
     ax1.legend(loc='upper left')
-
     
     #------- area 
     area = getArea()
@@ -60,11 +86,25 @@ def main():
     ax2.grid(True)
     ax2.legend(loc='upper left')
 
-    plt.show()
+    #rainfalls
+    rainfalls = getRainfalls()
 
+    rainfalls.reset_index()
+    for r in regions:
+        ax3.plot(rainfalls.index, rainfalls[r], label=r) #, marker='o'
+
+    ax3.set_title('Rainfalls vs time')
+    ax3.set_xlabel('Time')
+    ax3.set_ylabel('Rainfalls')
+    ax3.grid(True)
+    ax3.legend(loc='upper left')
+
+    plt.show()
     
-#
-fileName = 'D:\projects\dsacademy\palmoil\data\palm.xlsx'
+
+#fileName = 'D:\projects\dsacademy\palmoil\data\palm.xlsx'
+fileName = 'C:\DriveD\dsprojects\ds_palm_oil\data\palm.xlsx'
+regions = ['JHR', 'PHG', 'PRK', 'SBH', 'SWK', 'OTHERPEN']
 plt.style.use('fivethirtyeight')
 
 main()
