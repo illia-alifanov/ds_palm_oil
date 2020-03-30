@@ -4,13 +4,14 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>413678e1-4503-4f6f-8801-f916cbfc087f</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>palmoil.py</StartupFile>
+    <StartupFile>prod_regression.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>palmoil</Name>
     <RootNamespace>palmoil</RootNamespace>
+    <InterpreterId>CondaEnv|CondaEnv|CondaEnv</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,13 +22,25 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="helper.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="prod_import_helper.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="palmoil.py" />
+    <Compile Include="prod_regression.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="data\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="data\palm.xlsx" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="CondaEnv|CondaEnv|CondaEnv" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

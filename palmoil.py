@@ -1,66 +1,23 @@
-
+import os;
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import warnings
 
-from collections import defaultdict
+from helper import prepare_production
+from helper import forecast_err
 
-#import warnings
-#import itertools
-#warnings.filterwarnings("ignore")
+from prod_import_helper import getProduction, getArea, getRainfalls
+
+from statsmodels.tsa.seasonal import seasonal_decompose
+
 #import statsmodels.api as sm
-#import matplotlib
 #import array as arr
 
 
-def getProduction():
-    production_ = pd.read_excel(fileName, 'MonthlyProduction')
-    production_['Date'] = production_['Year'].apply(str) + '-' + production_['Month'].apply(str) + '-01'
-    production_['Date'] = production_['Date'].apply(pd.to_datetime)
-    return production_
-
-def getArea():
-    area_ = pd.read_excel(fileName, 'TotalPlantedArea')
-    area_['OTHERPEN'] = area_['KDH'] + 	area_['KTN'] + area_['MLK'] + area_['NSN'] + area_['PNG'] + area_['SGR'] + area_['TRG']
-    return area_
-
-def getRainfalls():
-    rainfalls_ = pd.read_excel(fileName, 'MonthlyRainfall')
-
-    # initialize month list
-    month = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-
-    # initialize dictionary of dictionaries
-    falls_regions = defaultdict(dict)
-
-    for index, row in rainfalls_.iterrows():
-      if row.State not in regions:
-        continue
-
-      for i, m in enumerate(month, start = 1):
-        date_str = str(row['Year']) + '-' + "{:02d}".format(i) + '-01'
-        new_data = {date_str: row[m]}
-        falls_regions[row.State].update(new_data)
-
-    result = pd.DataFrame()
-    for r in regions:
-      columns_list = [r]
-
-      if result.empty:
-        result = pd.DataFrame.from_dict(falls_regions[r], orient = 'index', columns = [r])
-        continue
-      else:
-        df = pd.DataFrame.from_dict(falls_regions[r], orient = 'index', columns = [r])
-      
-      result = result.join(df, how = 'outer')
-
-    return result
-
-
-def main():
-
+def data_plot():
     #------- production
-    production = getProduction()
+    production = getProduction(fileName)
 
     fig, (ax1, ax2, ax3) = plt.subplots(3, 1)
     #make a little extra space between the subplots
@@ -76,7 +33,7 @@ def main():
     ax1.legend(loc='upper left')
     
     #------- area 
-    area = getArea()
+    area = getArea(fileName)
     for r in regions:
         ax2.plot(area['YEAR'], area[r], label=r) #, marker='o'
 
@@ -87,7 +44,7 @@ def main():
     ax2.legend(loc='upper left')
 
     #rainfalls
-    rainfalls = getRainfalls()
+    rainfalls = getRainfalls(fileName)
 
     rainfalls.reset_index()
     for r in regions:
@@ -100,12 +57,85 @@ def main():
     ax3.legend(loc='upper left')
 
     plt.show()
-    
 
-#fileName = 'D:\projects\dsacademy\palmoil\data\palm.xlsx'
-fileName = 'C:\DriveD\dsprojects\ds_palm_oil\data\palm.xlsx'
+def run_arima(reg_name):
+  production = getProduction(fileName)
+  print(production.head(10))
+  ts = prepare_production(production, reg_name)
+  
+  result = seasonal_decompose(ts[reg_name], model='additive')
+  result.plot()
+  plt.show()
+
+  ts_decompose = seasonal_decompose(ts['diff'], model='additive')
+  #ts_decompose.plot()
+  #plt.show()
+
+  ts_resid = ts['diff'] - ts_decompose.seasonal
+  ts_resid_decompose = seasonal_decompose(ts_resid, model='additive')
+  ts_resid_decompose.plot()
+  plt.show()
+
+  from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+  plot_acf(ts_resid)
+  plot_pacf(ts_resid)
+  plt.show()
+
+  # train ARIMA
+  from statsmodels.tsa.arima_model import ARIMA
+
+  p_range = q_range = k_range = [0, 1, 2, 3]
+  validation_size = 20
+  prediction_window = 6
+  order_params = (0, 0, 0)
+  err = 140000
+  for p in p_range:
+      for q in q_range:
+          for k in k_range:
+              pqk_err = 0
+              is_built = True
+              for ind in range(len(ts_resid)-validation_size, len(ts_resid) - prediction_window):
+                  try:
+                      warnings.filterwarnings('ignore')
+                      model_arima = ARIMA(ts_resid.head(ind-1), order=(p, k, q)).fit(disp=0)
+                      warnings.filterwarnings('ignore')
+                      arima_forecast = model_arima.forecast(steps=prediction_window)[0]
+                      temp_err = forecast_err(arima_forecast, ts_resid.tail(len(ts_resid) - ind).head(prediction_window))
+                      pqk_err = pqk_err + temp_err
+                  except:
+                      is_built = False
+                      break
+              if is_built:
+                  print(p,q,k,pqk_err/14)
+              if pqk_err < err and is_built:
+                  err = pqk_err
+                  order_params = (p,k,q)
+
+  print(order_params, err)
+  
+  # show test interval forecast to plan
+  model_arima = ARIMA(ts_resid.head(len(ts_resid) - prediction_window -1), order=order_params).fit(disp=0)
+  warnings.filterwarnings('ignore')
+  arima_forecast = model_arima.forecast(steps=prediction_window)[0]
+  test_ts = ts_resid.tail(prediction_window)
+  forecast = pd.Series(arima_forecast, index=test_ts.index)
+  plt.plot(test_ts)
+  plt.plot(forecast, color = 'red')
+  plt.show()
+
+  # show ARIMA result #(3,0,1)
+  model = ARIMA(ts_resid, order=order_params)
+  model_fit = model.fit(disp=0)
+  output = model_fit.predict()
+
+  plt.plot(ts_resid)
+  plt.plot(output, color='red')
+  plt.show()
+#-------------------
+
+dirname = os.path.dirname(__file__)
+fileName = os.path.join(dirname, 'data/palm.xlsx')
 regions = ['JHR', 'PHG', 'PRK', 'SBH', 'SWK', 'OTHERPEN']
-plt.style.use('fivethirtyeight')
 
-main()
-
+#data_plot()
+run_arima('JHR')
