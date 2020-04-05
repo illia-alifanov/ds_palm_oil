@@ -29,7 +29,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="prod_arima.py" />
-    <Compile Include="prod_polt.py">
+    <Compile Include="prod_plot.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="prod_regression.py">
