@@ -7,7 +7,7 @@ import matplotlib as ss
 from helper import prepare_production, prepare_area, prepare_production_byyear, form_lag_ts_sample, area_form, forecast_err
 
 from helper import forecast_err
-from prod_import_helper import getProduction, getArea, getRainfalls
+from import_helper import getProduction, getArea, getRainfalls
 
 import sklearn.linear_model as lm
 
