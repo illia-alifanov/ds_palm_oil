@@ -11,6 +11,7 @@ def getProduction(fileName):
 def getArea(fileName):
     area_ = pd.read_excel(fileName, 'TotalPlantedArea')
     area_['OTHERPEN'] = area_['KDH'] + 	area_['KTN'] + area_['MLK'] + area_['NSN'] + area_['PNG'] + area_['SGR'] + area_['TRG']
+    area_ = area_.rename(columns={'YEAR':'Year'})
     return area_
 
 def getRainfalls(fileName):

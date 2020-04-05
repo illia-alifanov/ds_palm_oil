@@ -4,7 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as ss
 
-from helper import prepare_production, form_lag_ts_sample, area_form, forecast_err
+from helper import prepare_production, prepare_area, prepare_production_byyear, form_lag_ts_sample, area_form, forecast_err
+
 from helper import forecast_err
 from prod_import_helper import getProduction, getArea, getRainfalls
 
@@ -18,38 +19,35 @@ def mae_calc(model, validation, fact_values):
     diff = [abs((pred[i] - fact_values[i])/fact_values[i]) for i in range(0, len(pred))]
     return sum(diff) / len(pred)
 
-def main(fileName):
+def main(fileName, reg_name):
+
+  #production data processing
   production = getProduction(fileName)
   print(production.head(10))
-  reg_name = 'JHR'
-  region_ts = prepare_production(production, reg_name)
-  #production_processed = production_form(production)
-  print(region_ts.head(10))
+  region_ts = prepare_production_byyear(production, reg_name)
   
-  #production data processing
-  #region_ts = production_processed[production_processed.Region == 'JHR'][['date', 'Production', 'Year']]
-  #region_ts = region_ts.set_index(region_ts.date)
-
+  
   #production ts decomposition
   from statsmodels.tsa.seasonal import seasonal_decompose
+  region_ts = region_ts.set_index('Date')
   ts_seasonal = seasonal_decompose(region_ts[reg_name]).seasonal
   region_ts[reg_name] = region_ts[reg_name] - ts_seasonal
 
   #form laged data. Lag value can be validated as well
+  print(reg_name + ' mines seasonal component')
+  print(region_ts.head(10))
   data_sample =  form_lag_ts_sample(region_ts, reg_name, 3)
-
+  
   data_sample['season_value'] = ts_seasonal
-  data_sample['Date'] = region_ts['Date']
 
   #area data processing
-  #planted_area = pd.read_csv('area_npa.csv', sep=';')
   planted_area = getArea(fileName)
-  planted_area =  area_form(planted_area)
-  planted_area = planted_area[planted_area.Region == 'JHR'][['Date', 'Area_npa']]
+  planted_area = prepare_area(planted_area, reg_name)
 
-  #create dataset
-  data_sample = pd.merge(data_sample, planted_area, on = 'Date', how = 'left')
-  data_sample = data_sample.drop(columns=['Date'])
+  #create dataset for regression 
+  planted_area = planted_area.rename(columns={reg_name:'Area'})
+  data_sample = pd.merge(data_sample, planted_area, on = 'Year', how = 'left')
+  #data_sample = data_sample.drop(columns=['Date'])
 
   validation_size = 20
   prediction_window = 6
@@ -62,9 +60,9 @@ def main(fileName):
   for ind in range(len(train_set) - validation_size, len(train_set) - prediction_window):
       train = train_set.head(ind-1)
       validation = train_set.tail(len(train_set) - ind).head(prediction_window)
-      target_train = train.Production
+      target_train = train[reg_name]
       train = train.drop([reg_name], axis=1)
-      target_valid = validation.Production
+      target_valid = validation[reg_name]
       validation = validation.drop([reg_name], axis=1)
 
       # linear regression
@@ -75,20 +73,19 @@ def main(fileName):
   print('**** validation error (MAPE) is {0}'.format(np.mean(err)))
 
   regr = lm.LinearRegression()
-  regr.fit(train_set.drop([reg_name], axis=1), train_set.Production)
-  test_err = mae_calc(regr, test_set.drop([reg_name], axis=1), test_set.Production)
+  regr.fit(train_set.drop([reg_name], axis=1), train_set[reg_name])
+  test_err = mae_calc(regr, test_set.drop([reg_name], axis=1), test_set[reg_name])
   print('**** test error (MAPE) is {0}'.format(test_err))
 
   pred = regr.predict(data_sample.drop([reg_name], axis=1))
   forecast = pd.Series(pred, index=data_sample.index)
-  plt.plot(data_sample.Production)
+  plt.plot(data_sample[reg_name])
   plt.plot(forecast, color = 'red')
   plt.show()
 
 
-  
 dirname = os.path.dirname(__file__)
 fileName = os.path.join(dirname, 'data/palm.xlsx')
-regions = ['JHR', 'PHG', 'PRK', 'SBH', 'SWK', 'OTHERPEN']
 
-main(fileName)
+reg_name = 'JHR'
+main(fileName, reg_name)

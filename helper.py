@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import datetime
 
 def prepare_production(_production, reg_name):
   ts = _production[['Date', reg_name]]
@@ -13,7 +14,18 @@ def prepare_production(_production, reg_name):
   print(ts.head(10))
   return ts
   
+def prepare_production_byyear(_production, reg_name):
+  ts = _production[['Date', 'Year', reg_name]]
 
+  print(ts.head(10))
+  return ts
+
+def prepare_area(_area, reg_name):
+  ts = _area[['Year', reg_name]]
+  ts = ts.set_index('Year')
+  
+  print(ts.head(10))
+  return ts
 
 def forecast_err(forecast, fact):
     forecast = np.array(forecast)
@@ -25,6 +37,7 @@ def forecast_err(forecast, fact):
 def form_lag_ts_sample(dataset, ts_name, window):
     names = ['lag_{0}'.format(i) for i in range(window, 0, -1)]
     names.append(ts_name)
+    
     # names = names + list(dataset.columns)
     ts_sample = pd.DataFrame(columns=names, index=dataset.index[window:])
     # ts_sample[list(dataset.columns)]
@@ -32,6 +45,10 @@ def form_lag_ts_sample(dataset, ts_name, window):
         inds = [dataset.index[j] for j in range(i - window, i+1)]
         temp = [dataset[ts_name][ind] for ind in inds]
         ts_sample.loc[dataset.index[i]] = temp
+
+    ts_sample['Year'] = ts_sample.index.year
+
+    print(ts_sample.head(10))
     return ts_sample
 
 def area_form(planted_area):
