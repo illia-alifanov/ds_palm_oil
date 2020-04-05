@@ -19,6 +19,7 @@ def getRainfalls(fileName):
 
     # initialize month list
     month = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+    regions = ['JHR', 'PHG', 'PRK', 'SBH', 'SWK', 'OTHERPEN']
 
     # initialize dictionary of dictionaries
     falls_regions = defaultdict(dict)
@@ -39,7 +40,11 @@ def getRainfalls(fileName):
         continue
       else:
         df = pd.DataFrame.from_dict(falls_regions[r], orient = 'index', columns = [r])
-      
       result = result.join(df, how = 'outer')
+    
+    result.index = pd.to_datetime(result.index)
 
+    result['Year'] = result.index.year
+    #result.set_index('Year')
+    print(result.head(10))
     return result

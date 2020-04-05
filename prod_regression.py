@@ -43,11 +43,15 @@ def main(fileName, reg_name):
   #area data processing
   planted_area = getArea(fileName)
   planted_area = prepare_area(planted_area, reg_name)
+  planted_area = planted_area.rename(columns={reg_name:'Area'})
+
+  #rainfalls data processing
+  rainfals = getRainfalls(fileName)
+  rainfals = rainfals.rename(columns={reg_name:'Rainfalls'})
 
   #create dataset for regression 
-  planted_area = planted_area.rename(columns={reg_name:'Area'})
-  data_sample = pd.merge(data_sample, planted_area, on = 'Year', how = 'left')
-  #data_sample = data_sample.drop(columns=['Date'])
+  #data_sample = pd.merge(data_sample, planted_area, on = 'Year', how = 'left')
+  data_sample = pd.merge(data_sample, rainfals, on = 'Year', how = 'left')
 
   validation_size = 20
   prediction_window = 6
