@@ -16,15 +16,14 @@ def run_arima(reg_name):
   print(production.head(10))
   ts = prepare_production(production, reg_name)
   
-  result = seasonal_decompose(ts[reg_name], model='additive')
-  result.plot()
+  ts_region = seasonal_decompose(ts[reg_name], model='additive')
+  ts_region.plot()
   plt.show()
 
-  ts_decompose = seasonal_decompose(ts['diff'], model='additive')
-  #ts_decompose.plot()
-  #plt.show()
+  #ts_decompose = seasonal_decompose(ts['diff'], model='additive')
 
-  ts_resid = ts['diff'] - ts_decompose.seasonal
+  #ts_resid = ts['diff'] - ts_decompose.seasonal
+  ts_resid = ts[reg_name] - ts_region.seasonal
   ts_resid_decompose = seasonal_decompose(ts_resid, model='additive')
   ts_resid_decompose.plot()
   plt.show()
