@@ -2,7 +2,6 @@ import os;
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib as ss
 
 from helper import prepare_production, prepare_area, prepare_production_byyear, form_lag_ts_sample, area_form, forecast_err
 
@@ -50,7 +49,7 @@ def main(fileName, reg_name):
   rainfals = rainfals.rename(columns={reg_name:'Rainfalls'})
 
   #create dataset for regression 
-  #data_sample = pd.merge(data_sample, planted_area, on = 'Year', how = 'left')
+  data_sample = pd.merge(data_sample, planted_area, on = 'Year', how = 'left')
   data_sample = pd.merge(data_sample, rainfals, on = 'Year', how = 'left')
 
   validation_size = 20

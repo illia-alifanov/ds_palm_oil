@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>413678e1-4503-4f6f-8801-f916cbfc087f</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>prod_arima.py</StartupFile>
+    <StartupFile>prod_regression.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
