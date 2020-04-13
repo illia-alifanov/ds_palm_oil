@@ -53,6 +53,17 @@ def data_plot():
     plt.legend(loc='upper left')
     plt.show()
 
+    #EMA
+    reg_name = 'JHR'
+    production[reg_name].plot(label = reg_name)
+    production[reg_name].ewm(span=5).mean().plot(label='EMA5')
+    production[reg_name].ewm(span=10).mean().plot(label='EMA10')
+    production[reg_name].ewm(span=20).mean().plot(label='EMA20')
+    plt.title(reg_name + ' and EMAs')
+    plt.legend(loc='upper left')
+    plt.show()
+
+
 dirname = os.path.dirname(__file__)
 fileName = os.path.join(dirname, 'data/palm.xlsx')
 regions = ['JHR', 'PHG', 'PRK', 'SBH', 'SWK', 'OTHERPEN']

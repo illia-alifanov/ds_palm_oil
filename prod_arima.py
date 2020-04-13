@@ -17,8 +17,13 @@ def run_arima(reg_name):
   ts = prepare_production(production, reg_name)
   
   ts_region = seasonal_decompose(ts[reg_name], model='additive')
-  ts_region.plot()
+  ts_region.plot(reg_name + ' decompsosition')
   plt.show()
+
+  ts['diff'].plot(label= reg_name + ' first diff')
+  plt.title(reg_name + ' first diff')
+  plt.show()
+
 
   #use resids
   #ts_decompose = seasonal_decompose(ts['diff'], model='additive')
@@ -28,6 +33,7 @@ def run_arima(reg_name):
   ts_resid = ts[reg_name] - ts_region.seasonal
   ts_resid_decompose = seasonal_decompose(ts_resid, model='additive')
   ts_resid_decompose.plot()
+  plt.title(reg_name + ' - seasonal component decomposition')
   plt.show()
 
   from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
@@ -60,7 +66,7 @@ def run_arima(reg_name):
                       is_built = False
                       break
               if is_built:
-                  print(p,q,k,pqk_err/14)
+                  print(p,q,k,pqk_err/(validation_size - prediction_window))
               if pqk_err < err and is_built:
                   err = pqk_err
                   order_params = (p,k,q)

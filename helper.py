@@ -22,7 +22,7 @@ def prepare_production_byyear(_production, reg_name):
 
 def prepare_area(_area, reg_name):
   ts = _area[['Year', reg_name]]
-  ts = ts.set_index('Year')
+  #ts = ts.set_index('Year')
   
   print(ts.head(10))
   return ts

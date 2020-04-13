@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>413678e1-4503-4f6f-8801-f916cbfc087f</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>prod_regression.py</StartupFile>
+    <StartupFile>prod_arima.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -29,6 +29,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="prod_arima.py" />
+    <Compile Include="prod_ml.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="prod_plot.py">
       <SubType>Code</SubType>
     </Compile>
