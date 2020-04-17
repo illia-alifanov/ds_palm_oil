@@ -46,7 +46,9 @@ def main(fileName, reg_name):
 
   #rainfalls data processing
   rainfals = getRainfalls(fileName)
+  rainfals = rainfals[[reg_name, 'Year']]
   rainfals = rainfals.rename(columns={reg_name:'Rainfalls'})
+  rainfals = rainfals.groupby('Year')['Rainfalls'].sum()
 
   #create dataset for regression 
   data_sample = pd.merge(data_sample, planted_area, on = 'Year', how = 'left')

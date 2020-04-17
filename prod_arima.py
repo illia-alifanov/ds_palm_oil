@@ -16,8 +16,8 @@ def run_arima(reg_name):
   print(production.head(10))
   ts = prepare_production(production, reg_name)
   
-  ts_region = seasonal_decompose(ts[reg_name], model='additive')
-  ts_region.plot(reg_name + ' decompsosition')
+  ts_region_decompose = seasonal_decompose(ts[reg_name], model='additive')
+  ts_region_decompose.plot(reg_name + ' decompsosition')
   plt.show()
 
   ts['diff'].plot(label= reg_name + ' first diff')
@@ -30,11 +30,12 @@ def run_arima(reg_name):
   #ts_resid = ts['diff'] - ts_decompose.seasonal
 
   #use prod data
-  ts_resid = ts[reg_name] - ts_region.seasonal
-  ts_resid_decompose = seasonal_decompose(ts_resid, model='additive')
-  ts_resid_decompose.plot()
-  plt.title(reg_name + ' - seasonal component decomposition')
-  plt.show()
+  ts_resid = ts[reg_name] #- ts_region_decompose.seasonal
+  #ts_resid_decompose = seasonal_decompose(ts_resid, model='additive')
+  
+  #ts_resid_decompose.plot()
+  #plt.title(reg_name + ' - seasonal component decomposition')
+  #plt.show()
 
   from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
   plot_acf(ts_resid)
@@ -48,11 +49,13 @@ def run_arima(reg_name):
   validation_size = 20
   prediction_window = 6
   order_params = (0, 0, 0)
+
+  print('p k q error')
   err = 140000
   for p in p_range:
       for q in q_range:
           for k in k_range:
-              pqk_err = 0
+              pkq_err = 0
               is_built = True
               for ind in range(len(ts_resid)-validation_size, len(ts_resid) - prediction_window):
                   try:
@@ -61,17 +64,17 @@ def run_arima(reg_name):
                       warnings.filterwarnings('ignore')
                       arima_forecast = model_arima.forecast(steps=prediction_window)[0]
                       temp_err = forecast_err(arima_forecast, ts_resid.tail(len(ts_resid) - ind).head(prediction_window))
-                      pqk_err = pqk_err + temp_err
+                      pkq_err = pkq_err + temp_err
                   except:
                       is_built = False
                       break
               if is_built:
-                  print(p,q,k,pqk_err/(validation_size - prediction_window))
-              if pqk_err < err and is_built:
-                  err = pqk_err
+                  print(p,k,q,pkq_err/(validation_size - prediction_window))
+              if pkq_err < err and is_built:
+                  err = pkq_err
                   order_params = (p,k,q)
 
-  print(order_params, err)
+  print(order_params, err/(validation_size - prediction_window))
   
   # show test interval forecast to plan
   model_arima = ARIMA(ts_resid.head(len(ts_resid) - prediction_window -1), order=order_params).fit(disp=0)
@@ -97,4 +100,4 @@ dirname = os.path.dirname(__file__)
 fileName = os.path.join(dirname, 'data/palm.xlsx')
 regions = ['JHR', 'PHG', 'PRK', 'SBH', 'SWK', 'OTHERPEN']
 
-run_arima('JHR')
+run_arima('SBH')
